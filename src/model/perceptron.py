@@ -58,6 +58,8 @@ class Perceptron(Classifier):
         """
         
         # Write your code to train the perceptron here
+        # classify and check result
+        # if result incorrect: self.updateWeights(?, ?)
         pass
 
     def classify(self, testInstance):
@@ -73,7 +75,9 @@ class Perceptron(Classifier):
             True if the testInstance is recognized as a 7, False otherwise.
         """
         # Write your code to do the classification on an input image
-        pass
+        # simulate firing of neurons and return result
+        # return Activation.sign() of last neuron
+        return False
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.
