@@ -67,7 +67,7 @@ class Perceptron(Classifier):
                 current_input = self.trainingSet.input[index]
                 current_label = float(self.trainingSet.label[index])
 
-                classification_result = int(self.classify(current_input))
+                classification_result = float(self.classify(current_input))
                 error = current_label - classification_result
                 if current_label != classification_result:
                     self.updateWeights(current_input, error);
