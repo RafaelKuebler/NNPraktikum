@@ -46,7 +46,7 @@ class Perceptron(Classifier):
         self.testSet = test
 
         # Initialize the weight vector with small random values
-        # around 0 and0.1
+        # around 0 and 0.1
         self.weight = np.random.rand(self.trainingSet.input.shape[1])/100
 
     def train(self, verbose=True):
@@ -63,18 +63,15 @@ class Perceptron(Classifier):
 
         for i in range(self.epochs):
             # classify whole list and check result
-            sum_error = 0
             for index in range(input_size):
                 current_input = self.trainingSet.input[index]
-                current_label = self.trainingSet.label[index]
+                current_label = float(self.trainingSet.label[index])
 
                 classification_result = int(self.classify(current_input))
-                expected_result = int(current_label)
-                error = expected_result - classification_result
-                sum_error += error
-                if expected_result != classification_result:
+                error = current_label - classification_result
+                if current_label != classification_result:
                     self.updateWeights(current_input, error);
-            logging.debug("{} {} {} {}".format("Epoch", i, "Error", sum_error))
+            logging.debug("{} {}".format("Epoch", i))
 
         end_time = time.time()
         logging.debug("{} {}".format("Elapsed time: ", end_time - start_time))
@@ -91,7 +88,7 @@ class Perceptron(Classifier):
         bool :
             True if the testInstance is recognized as a 7, False otherwise.
         """
-        
+
         return self.fire(testInstance)
 
     def evaluate(self, test=None):
