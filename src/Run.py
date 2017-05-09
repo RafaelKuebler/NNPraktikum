@@ -15,7 +15,7 @@ def main():
     myPerceptronClassifier = Perceptron(data.trainingSet,
                                         data.validationSet,
                                         data.testSet,
-                                        learningRate=0.005,
+                                        learningRate= 0.01, # 0.005,
                                         epochs=30)
     
     # Train the classifiers
