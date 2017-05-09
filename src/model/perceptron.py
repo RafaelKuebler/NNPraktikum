@@ -4,6 +4,7 @@ import sys
 import logging
 
 import numpy as np
+import time
 
 from util.activation_functions import Activation
 from model.classifier import Classifier
@@ -56,11 +57,27 @@ class Perceptron(Classifier):
         verbose : boolean
             Print logging messages with validation accuracy if verbose is True.
         """
-        
-        # Write your code to train the perceptron here
-        # classify and check result
-        # if result incorrect: self.updateWeights(?, ?)
-        pass
+
+        start_time = time.time()
+        input_size = len(self.trainingSet.input)
+
+        for i in range(self.epochs):
+            # classify whole list and check result
+            sum_error = 0
+            for index in range(input_size):
+                current_input = self.trainingSet.input[index]
+                current_label = self.trainingSet.label[index]
+
+                classification_result = int(self.classify(current_input))
+                expected_result = int(current_label)
+                error = expected_result - classification_result
+                sum_error += error
+                if expected_result != classification_result:
+                    self.updateWeights(current_input, error);
+            logging.debug("{} {} {} {}".format("Epoch", i, "Error", sum_error))
+
+        end_time = time.time()
+        logging.debug("{} {}".format("Elapsed time: ", end_time - start_time))
 
     def classify(self, testInstance):
         """Classify a single instance.
@@ -74,10 +91,8 @@ class Perceptron(Classifier):
         bool :
             True if the testInstance is recognized as a 7, False otherwise.
         """
-        # Write your code to do the classification on an input image
-        # simulate firing of neurons and return result
-        # return Activation.sign() of last neuron
-        return False
+        
+        return self.fire(testInstance)
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.
@@ -99,8 +114,7 @@ class Perceptron(Classifier):
         return list(map(self.classify, test))
 
     def updateWeights(self, input, error):
-        # Write your code to update the weights of the perceptron here
-        pass
+        self.weight += self.learningRate*error*input
          
     def fire(self, input):
         """Fire the output of the perceptron corresponding to the input """
