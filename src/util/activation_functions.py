@@ -4,6 +4,7 @@
 Activation functions which can be used within neurons.
 """
 
+#import numpy as np
 from numpy import exp
 from numpy import divide
 
@@ -31,12 +32,16 @@ class Activation:
     @staticmethod
     def tanh(netOutput):
         # Here you have to code the tanh function
-        pass
+        
+        ##return np.tanh(netOutput)
+        return (divide(1-exp(-2*netOutput)),(1+exp(-2*netOutput)))
+        
 
     @staticmethod
     def tanhPrime(netOutput):
         # Here you have to code the derivative of tanh function
-        pass
+        return (1-Activation.tanh(netOutput)**2)
+        
 
     @staticmethod
     def rectified(netOutput):

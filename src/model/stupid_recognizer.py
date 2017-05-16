@@ -23,6 +23,11 @@ class StupidRecognizer(Classifier):
         self.trainingSet = train
         self.validationSet = valid
         self.testSet = test
+        
+        
+        #print(self.trainingSet.label[0])
+        #print(len(self.trainingSet.input[0]))
+        
 
     def train(self):
         # Do nothing

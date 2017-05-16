@@ -7,6 +7,7 @@ import numpy as np
 
 from util.activation_functions import Activation
 from model.classifier import Classifier
+from report import evaluator as rep
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.DEBUG,
@@ -45,7 +46,7 @@ class Perceptron(Classifier):
         self.testSet = test
 
         # Initialize the weight vector with small random values
-        # around 0 and0.1
+        # around 0 and 0.1
         self.weight = np.random.rand(self.trainingSet.input.shape[1])/100
 
     def train(self, verbose=True):
@@ -58,7 +59,37 @@ class Perceptron(Classifier):
         """
         
         # Write your code to train the perceptron here
-        pass
+        '''
+        self.trainingSet.label[i] -> label int
+        self.trainingSet.input[i] -> input list len=784
+        '''
+        
+        #add bias
+        b = 0.01
+        np.insert(self.weight, 0, b) ##add bias to weight vector
+        
+        
+        for i in range(self.epochs):
+            
+            for j in range(len(self.trainingSet.input)):
+                x = self.trainingSet.input[j] ##training inputvector x
+                np.insert(x,0,1) ##add flat 1 for bias
+                y = self.trainingSet.label[j] ##training labels           
+                y_hat = Perceptron.classify(self, x) ##predicted labels
+                
+                sig = y - y_hat ##direction of update
+                
+                if y != y_hat: ##if classification is not correct, update weights
+                    Perceptron.updateWeights(self, x, sig)
+            
+            if verbose:
+                eva = rep.Evaluator()
+                eva.printAccuracy(self.validationSet, 
+                                  Perceptron.evaluate(self, self.validationSet.input))
+            
+        #pass
+
+
 
     def classify(self, testInstance):
         """Classify a single instance.
@@ -73,7 +104,10 @@ class Perceptron(Classifier):
             True if the testInstance is recognized as a 7, False otherwise.
         """
         # Write your code to do the classification on an input image
-        pass
+        return Perceptron.fire(self, testInstance)
+        
+        
+
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.
@@ -96,8 +130,11 @@ class Perceptron(Classifier):
 
     def updateWeights(self, input, error):
         # Write your code to update the weights of the perceptron here
-        pass
+        self.weight = (self.weight + self.learningRate * input * error)
+        
+        #pass
          
+    
     def fire(self, input):
         """Fire the output of the perceptron corresponding to the input """
         return Activation.sign(np.dot(np.array(input), self.weight))
