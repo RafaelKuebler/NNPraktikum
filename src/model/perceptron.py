@@ -4,9 +4,12 @@ import sys
 import logging
 
 import numpy as np
+import time
 
 from util.activation_functions import Activation
 from model.classifier import Classifier
+from report.evaluator import Evaluator
+from util.loss_functions import DifferentError
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.DEBUG,
@@ -45,58 +48,50 @@ class Perceptron(Classifier):
         self.testSet = test
 
         # Initialize the weight vector with small random values
-        # around 0 and0.1
+        # around 0 and 0.1
         self.weight = np.random.rand(self.trainingSet.input.shape[1])/100
 
     def train(self, verbose=True):
-        """Train the perceptron with the perceptron learning algorithm.
-
+        """
         Parameters
         ----------
         verbose : boolean
             Print logging messages with validation accuracy if verbose is True.
         """
-        
-        # Write your code to train the perceptron here
-        pass
+
+        start_time = time.time()
+        input_size = len(self.trainingSet.input)
+        error_calc = DifferentError()
+
+        for i in range(self.epochs):
+            if verbose:
+                evaluator = Evaluator()
+                evaluator.printAccuracy(self.validationSet,
+                                        self.evaluate(self.validationSet.input))
+
+            for index in range(input_size):
+                current_input = self.trainingSet.input[index]
+                current_label = float(self.trainingSet.label[index])
+
+                classification_result = float(self.classify(current_input))
+
+                if current_label != classification_result:
+                    error = error_calc.calculateError(current_label, classification_result)
+                    self.updateWeights(current_input, error);
+
+        end_time = time.time()
+        logging.debug("{} {}".format("Elapsed time:", end_time - start_time))
 
     def classify(self, testInstance):
-        """Classify a single instance.
-
-        Parameters
-        ----------
-        testInstance : list of floats
-
-        Returns
-        -------
-        bool :
-            True if the testInstance is recognized as a 7, False otherwise.
-        """
-        # Write your code to do the classification on an input image
-        pass
+        return self.fire(testInstance)
 
     def evaluate(self, test=None):
-        """Evaluate a whole dataset.
-
-        Parameters
-        ----------
-        test : the dataset to be classified
-        if no test data, the test set associated to the classifier will be used
-
-        Returns
-        -------
-        List:
-            List of classified decisions for the dataset's entries.
-        """
         if test is None:
             test = self.testSet.input
-        # Once you can classify an instance, just use map for all of the test
-        # set.
         return list(map(self.classify, test))
 
     def updateWeights(self, input, error):
-        # Write your code to update the weights of the perceptron here
-        pass
+        self.weight += self.learningRate*error*input
          
     def fire(self, input):
         """Fire the output of the perceptron corresponding to the input """
