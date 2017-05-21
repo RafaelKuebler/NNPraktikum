@@ -9,6 +9,7 @@ import time
 from util.activation_functions import Activation
 from model.classifier import Classifier
 from report.evaluator import Evaluator
+from util.loss_functions import DifferentError
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.DEBUG,
@@ -60,23 +61,26 @@ class Perceptron(Classifier):
 
         start_time = time.time()
         input_size = len(self.trainingSet.input)
+        error_calc = DifferentError()
 
         for i in range(self.epochs):
             if verbose:
                 evaluator = Evaluator()
-                evaluator.printAccuracy(self.validationSet, self.evaluate(self.validationSet.input))
+                evaluator.printAccuracy(self.validationSet,
+                                        self.evaluate(self.validationSet.input))
 
             for index in range(input_size):
                 current_input = self.trainingSet.input[index]
                 current_label = float(self.trainingSet.label[index])
 
                 classification_result = float(self.classify(current_input))
-                error = current_label - classification_result
+
                 if current_label != classification_result:
+                    error = error_calc.calculateError(current_label, classification_result)
                     self.updateWeights(current_input, error);
 
         end_time = time.time()
-        logging.debug("{} {}".format("Elapsed time: ", end_time - start_time))
+        logging.debug("{} {}".format("Elapsed time:", end_time - start_time))
 
     def classify(self, testInstance):
         return self.fire(testInstance)
