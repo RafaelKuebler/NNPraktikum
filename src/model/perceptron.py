@@ -2,17 +2,23 @@
 
 import sys
 import logging
+import time
 
 import numpy as np
 from PIL import Image
 
-from util.activation_functions import Activation
 from model.classifier import Classifier
-
+from report.evaluator import Evaluator
+from util.activation_functions import Activation
+from util.loss_functions import DifferentError
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.DEBUG,
                     stream=sys.stdout)
+
+
+# change to true to generate weight visualizing images
+_do_weight_visualization = False
 
 
 class Perceptron(Classifier):
@@ -59,28 +65,38 @@ class Perceptron(Classifier):
             Print logging messages with validation accuracy if verbose is True.
         """
 
-        # Write your code to train the perceptron here
+        # change to true to generate weight visualizing images
+        do_weight_visualization = verbose and False
+
+        start_time = time.time()
+        evaluator = Evaluator()
+        differentError = DifferentError()
 
         if verbose:
-            self.logAccuracy(-1)
+            self.logPerformance(evaluator, -1)
 
         for epoch in range(self.epochs):
 
             # run the training epoch on training set
-            for i in range(len(self.trainingSet.input)):
-                instance = self.trainingSet.input[i]
-                target = float(self.trainingSet.label[i])
+            for index in range(len(self.trainingSet.input)):
+                instance = self.trainingSet.input[index]
+                target = float(self.trainingSet.label[index])
 
                 # float(bool) == 1. if true | 0. if false
-                out = float(self.classify(instance))
+                output = float(self.classify(instance))
 
-                error = target - out
-
-                self.updateWeights(instance, error)
+                if output != target:
+                    #error = target - output
+                    error = differentError.calculateError(target, output)
+                    self.updateWeights(instance, error)
 
             if verbose:
-                self.logAccuracy(epoch)
-                self.visualizeWeights(epoch)
+                self.logPerformance(evaluator, epoch)
+                if _do_weight_visualization:
+                    self.visualizeWeights(epoch)
+
+        end_time = time.time()
+        logging.debug("Elapsed time: {}".format(end_time - start_time))
 
 
     def classify(self, testInstance):
@@ -95,7 +111,6 @@ class Perceptron(Classifier):
         bool :
             True if the testInstance is recognized as a 7, False otherwise.
         """
-        # Write your code to do the classification on an input image
         return self.fire(testInstance)
 
 
@@ -120,11 +135,8 @@ class Perceptron(Classifier):
 
 
     def updateWeights(self, input, error):
-        # Write your code to update the weights of the perceptron here
         # w_i = w_i + eta * (t - o) * x
-        for i in range(len(self.weight)):
-            update = self.learningRate * error * input[i]
-            self.weight[i] += update
+        self.weight += self.learningRate * error * input
 
 
     def fire(self, input):
@@ -132,34 +144,16 @@ class Perceptron(Classifier):
         return Activation.sign(np.dot(np.array(input), self.weight))
 
 
-    def logAccuracy(self, epoch):
-        # calculate accuracy and false positive rate on validation set
-        hits, falsePos = 0, 0
-        setSize = len(self.validationSet.input)
-
-        for i in range(setSize):
-            instance = self.validationSet.input[i]
-            target = self.validationSet.label[i]
-
-            out = self.classify(instance)
-
-            if out == target:
-                hits += 1
-            elif out:  # if false pos
-                falsePos += 1
-
-        accuracy = float(hits) / setSize
-        falsePosRate = float(falsePos) / setSize
-
-        # print newline (and thereby ensure flush)
-        logging.debug("Epoch {}: Acc: {}% | FPR: {}%".format(
-            epoch, accuracy * 100, falsePosRate * 100))
+    def logPerformance(self, evaluator, epoch):
+        sys.stdout.write("Epoch {:>2}: ".format(epoch))
+        evaluator.printAccuracy(self.validationSet,
+                                self.evaluate(self.validationSet.input))
 
 
     def visualizeWeights(self, epoch=-1):
         img = Image.new("L", (28, 28))
         data = map(lambda w: 255*w, self.weight)
         img.putdata(data)
-        img.save("epoch_{}.png".format(epoch))
+        img.save("weights_epoch_{}.png".format(epoch))
 
 
