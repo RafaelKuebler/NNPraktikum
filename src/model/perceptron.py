@@ -10,7 +10,6 @@ import time
 from PIL import Image 
 
 
-
 from util.activation_functions import Activation
 from model.classifier import Classifier
 from report.evaluator import Evaluator
@@ -19,6 +18,10 @@ from util.loss_functions import DifferentError
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.DEBUG,
                     stream=sys.stdout)
+
+
+# change to true to generate weight visualizing images
+_do_weight_visualization = False
 
 
 class Perceptron(Classifier):
@@ -64,20 +67,18 @@ class Perceptron(Classifier):
             Print logging messages with validation accuracy if verbose is True.
         """
 
-	# change to true to generate weight visualizing images
-	do_weight_visualization = verbose and False
-
         start_time = time.time()
         input_size = len(self.trainingSet.input)
+        evaluator = Evaluator()
         error_calc = DifferentError()
 
         for epoch in range(self.epochs):
             if verbose:
-                evaluator = Evaluator()
                 evaluator.printAccuracy(self.validationSet,
                                         self.evaluate(self.validationSet.input))
-		if do_weight_visualization:
-		  self.visualizeWeights(epoch)
+
+            if _do_weight_visualization:
+                self.visualizeWeights(epoch)
 
             for index in range(input_size):
                 current_input = self.trainingSet.input[index]
@@ -86,14 +87,15 @@ class Perceptron(Classifier):
                 classification_result = float(self.classify(current_input))
 
                 if current_label != classification_result:
+                    # error = label - result
                     error = error_calc.calculateError(current_label, classification_result)
                     self.updateWeights(current_input, error);
 
         end_time = time.time()
         logging.debug("{} {}".format("Elapsed time:", end_time - start_time))
-        
-        if do_weight_visualization:
-		  self.visualizeWeights(self.epochs)
+
+        if _do_weight_visualization:
+            self.visualizeWeights(self.epochs)
 
     def classify(self, testInstance):
         return self.fire(testInstance)
@@ -109,7 +111,6 @@ class Perceptron(Classifier):
     def fire(self, input):
         """Fire the output of the perceptron corresponding to the input """
         return Activation.sign(np.dot(np.array(input), self.weight))
-
 
     def visualizeWeights(self, epoch=-1):
         img = Image.new("L", (28, 28))
