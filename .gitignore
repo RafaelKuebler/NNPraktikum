@@ -90,3 +90,6 @@ ENV/
 
 # Pycharm project files
 .idea
+
+# plot directory
+plots/

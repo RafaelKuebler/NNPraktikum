@@ -4,6 +4,8 @@ import sys
 import logging
 
 import numpy as np
+import sklearn.metrics as metrics
+import matplotlib.pyplot as plt
 
 from util.activation_functions import Activation
 from model.classifier import Classifier
@@ -47,6 +49,9 @@ class LogisticRegression(Classifier):
         # Initialize the weight vector with small values
         self.weight = 0.01*np.random.randn(self.trainingSet.input.shape[1])
 
+        self.accuracyValid = np.zeros(self.epochs + 1)
+        self.accuracyTest = np.zeros(self.epochs + 1)
+
     def train(self, verbose=True):
         """Train the Logistic Regression.
 
@@ -56,8 +61,36 @@ class LogisticRegression(Classifier):
             Print logging messages with validation accuracy if verbose is True.
         """
 
-        pass
-        
+
+        from util.loss_functions import DifferentError
+        loss = DifferentError()
+
+        self.accuracyValid = np.zeros(self.epochs + 1)
+        self.accuracyTest = np.zeros(self.epochs + 1)
+
+        if verbose:
+            self.trackAccuracy(0)
+
+        # make epoch go 1..epochs (not 0..epochs-1)
+        for epoch in range(self.epochs+1)[1:]:
+            grad = np.zeros(self.weight.shape[0])
+
+            for input, label in zip(self.trainingSet.input,
+                                    self.trainingSet.label):
+                output = self.fire(input)
+
+                error = loss.calculateError(label, output)
+                grad += error * input
+
+            self.updateWeights(grad)
+
+            if verbose:
+                self.trackAccuracy(epoch)
+
+        if verbose:
+            self.plotAccuracy()
+
+
     def classify(self, testInstance):
         """Classify a single instance.
 
@@ -70,7 +103,7 @@ class LogisticRegression(Classifier):
         bool :
             True if the testInstance is recognized as a 7, False otherwise.
         """
-        pass
+        return self.fire(testInstance) >= 0.5
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.
@@ -92,9 +125,41 @@ class LogisticRegression(Classifier):
         return list(map(self.classify, test))
 
     def updateWeights(self, grad):
-        pass
+        self.weight += self.learningRate * grad
 
     def fire(self, input):
         # Look at how we change the activation function here!!!!
         # Not Activation.sign as in the perceptron, but sigmoid
         return Activation.sigmoid(np.dot(np.array(input), self.weight))
+
+    def trackAccuracy(self, epoch, log=True):
+        """Calculates the accuracy, stores it for the given epoch
+        and returns it.
+        If log is true, the accuracy is logged.
+        """
+
+        validAcc = metrics.accuracy_score(self.validationSet.label,
+                                          self.evaluate(self.validationSet))
+        testAcc = metrics.accuracy_score(self.testSet.label,
+                                         self.evaluate(self.testSet))
+
+        self.accuracyValid[epoch] = validAcc
+        self.accuracyTest[epoch] = testAcc
+
+        if log:
+            logging.info("Epoch {}: Accuracy = {}% (on test: {}%)"
+                         .format(epoch, validAcc * 100, testAcc * 100))
+
+        return validAcc
+
+
+    def plotAccuracy(self):
+        epoch_axis = np.linspace(0, self.epochs, self.epochs + 1, endpoint=True)
+        plt.plot(epoch_axis, self.accuracyValid, label="Accuracy (validation set)")
+        plt.plot(epoch_axis, self.accuracyTest, label="Accuracy (test set)")
+        plt.legend(loc="lower right")
+        plt.savefig("plots/accuracy.png", dpi=100)
+        plt.show()
+
+
+
