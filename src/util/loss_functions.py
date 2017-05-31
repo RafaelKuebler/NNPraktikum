@@ -59,7 +59,6 @@ class MeanSquaredError(Error):
         self.errorString = 'mse'
 
     def calculateError(self, target, output):
-        # Here you have to code the MSE
         # MSE = 1/n*sum (i=1 to n) of (target_i - output_i)^2)
         pass
 
@@ -73,7 +72,6 @@ class SumSquaredError(Error):
         self.errorString = 'sse'
 
     def calculateError(self, target, output):
-        # Here you have to code the SSE
         # SSE = 1/2*sum (i=1 to n) of (target_i - output_i)^2)
         pass
 
