@@ -65,7 +65,11 @@ class Activation:
     @staticmethod
     def softmax(netOutput):
         # Here you have to code the softmax function
-        # how should we do that? -> we need netOutput of other units as well
+
+        # softmax: e^(net_j) / sum(k) of (e^net_k)
+        # how should we do that? We need:
+        # - netOutput of other units as well (netOutput could be a list over k)
+        # - the index of the unit in the numerator (j)
         pass
 
     @staticmethod
