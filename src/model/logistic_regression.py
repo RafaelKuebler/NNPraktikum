@@ -62,9 +62,12 @@ class LogisticRegression(Classifier):
             Print logging messages with validation accuracy if verbose is True.
         """
 
+        use_batch_mse = False
 
         from util.loss_functions import DifferentError
-        loss = DifferentError()
+        from util.loss_functions import MeanSquaredError
+        lossDE = DifferentError()
+        lossMSE = MeanSquaredError()
 
         self.accuracyValid = np.zeros(self.epochs + 1)
         self.accuracyTest = np.zeros(self.epochs + 1)
@@ -76,14 +79,29 @@ class LogisticRegression(Classifier):
         for epoch in range(self.epochs+1)[1:]:
             grad = np.zeros(self.weight.shape[0])
 
-            for input, label in zip(self.trainingSet.input,
-                                    self.trainingSet.label):
-                output = self.fire(input)
+            if use_batch_mse:
 
-                error = loss.calculateError(label, output)
-                grad += error * input
+                # compute output for all instances
+                outputs = map(self.fire, self.trainingSet.input)
+                targets = self.trainingSet.label
 
-            self.updateWeights(grad)
+                error = lossMSE.calculateError(targets, outputs)
+
+                # how to calculate the gradient out of this?
+                # grad = ??
+
+                self.updateWeights(grad)
+
+            else:
+                # classical approach with different error
+                for input, label in zip(self.trainingSet.input,
+                                        self.trainingSet.label):
+                    output = self.fire(input)
+
+                    error = lossDE.calculateError(label, output)
+                    grad += error * input
+
+                self.updateWeights(grad)
 
             if verbose:
                 self.trackAccuracy(epoch)
