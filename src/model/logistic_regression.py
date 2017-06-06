@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import os
 import logging
 
 import numpy as np
@@ -132,6 +133,7 @@ class LogisticRegression(Classifier):
         # Not Activation.sign as in the perceptron, but sigmoid
         return Activation.sigmoid(np.dot(np.array(input), self.weight))
 
+
     def trackAccuracy(self, epoch, log=True):
         """Calculates the accuracy, stores it for the given epoch
         and returns it.
@@ -158,7 +160,11 @@ class LogisticRegression(Classifier):
         plt.plot(epoch_axis, self.accuracyValid, label="Accuracy (validation set)")
         plt.plot(epoch_axis, self.accuracyTest, label="Accuracy (test set)")
         plt.legend(loc="lower right")
+
+        if not os.path.exists("plots"):
+            os.makedirs("plots")
         plt.savefig("plots/accuracy.png", dpi=100)
+
         plt.show()
 
 
