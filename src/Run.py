@@ -18,7 +18,7 @@ def main():
                                         data.testSet,
                                         learningRate=0.005,
                                         epochs=30)
-    myLogisticClassifier = Perceptron(data.trainingSet,
+    myLogisticClassifier = LogisticRegression(data.trainingSet,
                                         data.validationSet,
                                         data.testSet,
                                         learningRate=0.005,
@@ -45,7 +45,7 @@ def main():
     # Explicitly specify the test set to be evaluated
     stupidPred = myStupidClassifier.evaluate()
     perceptronPred = myPerceptronClassifier.evaluate()
-    logisticPred = myPerceptronClassifier.evaluate()
+    logisticPred = myLogisticClassifier.evaluate()
 
     # Report the result
     print("=========================")

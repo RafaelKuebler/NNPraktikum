@@ -55,8 +55,34 @@ class LogisticRegression(Classifier):
             Print logging messages with validation accuracy if verbose is True.
         """
 
-        pass
-        
+        from util.loss_functions import DifferentError
+        loss = DifferentError()
+        # which error function should we take???
+
+        iteration = 0
+        grad = 0
+
+        # Train for some epochs if the error is not 0
+        while True:
+            totalError = 0
+            for input, label in zip(self.trainingSet.input,
+                                    self.trainingSet.label):
+                output = self.fire(input)
+
+                if output != label:
+                    error = loss.calculateError(label, output)
+                    grad += error * input
+                    self.updateWeights(grad)
+                    totalError += error
+
+            iteration += 1
+
+            if verbose:
+                logging.info("Epoch: %i; Error: %i", iteration, -totalError)
+
+            if totalError == 0 or iteration >= self.epochs:
+                break
+
     def classify(self, testInstance):
         """Classify a single instance.
 
@@ -69,7 +95,7 @@ class LogisticRegression(Classifier):
         bool :
             True if the testInstance is recognized as a 7, False otherwise.
         """
-        return self.fire(testInstance)
+        return self.fire(testInstance) > 0.5
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.
@@ -84,12 +110,13 @@ class LogisticRegression(Classifier):
         List:
             List of classified decisions for the dataset's entries.
         """
+
         if test is None:
             test = self.testSet.input
         return list(map(self.classify, test))
 
     def updateWeights(self, grad):
-        pass
+        self.weight += self.learningRate * grad
 
     def fire(self, input):
         return Activation.sigmoid(np.dot(np.array(input), self.weight))
