@@ -44,7 +44,6 @@ class LogisticRegression(Classifier):
         self.validationSet = valid
         self.testSet = test
 
-        # Initialize the weight vector with small values
         self.weight = 0.01*np.random.randn(self.trainingSet.input.shape[1])
 
     def train(self, verbose=True):
@@ -70,7 +69,7 @@ class LogisticRegression(Classifier):
         bool :
             True if the testInstance is recognized as a 7, False otherwise.
         """
-        pass
+        return self.fire(testInstance)
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.
@@ -87,14 +86,10 @@ class LogisticRegression(Classifier):
         """
         if test is None:
             test = self.testSet.input
-        # Once you can classify an instance, just use map for all of the test
-        # set.
         return list(map(self.classify, test))
 
     def updateWeights(self, grad):
         pass
 
     def fire(self, input):
-        # Look at how we change the activation function here!!!!
-        # Not Activation.sign as in the perceptron, but sigmoid
         return Activation.sigmoid(np.dot(np.array(input), self.weight))
