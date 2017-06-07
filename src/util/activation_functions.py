@@ -6,6 +6,7 @@ Activation functions which can be used within neurons.
 
 from numpy import exp
 from numpy import divide
+import numpy as np
 
 class Activation:
     """
@@ -67,10 +68,7 @@ class Activation:
         # Here you have to code the softmax function
 
         # softmax: e^(net_j) / sum(k) of (e^net_k)
-        # how should we do that? We need:
-        # - netOutput of other units as well (netOutput could be a list over k)
-        # - the index of the unit in the numerator (j)
-        pass
+        return np.exp(netOutput) / np.sum(np.exp(netOutput))
 
     @staticmethod
     def getActivation(str):
