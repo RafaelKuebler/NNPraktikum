@@ -62,12 +62,11 @@ class LogisticRegression(Classifier):
             Print logging messages with validation accuracy if verbose is True.
         """
 
-        use_batch_mse = False
+        use_sse = False
 
-        from util.loss_functions import DifferentError
-        from util.loss_functions import MeanSquaredError
+        from util.loss_functions import DifferentError, SumSquaredError
         lossDE = DifferentError()
-        lossMSE = MeanSquaredError()
+        lossSSE = SumSquaredError()
 
         self.accuracyValid = np.zeros(self.epochs + 1)
         self.accuracyTest = np.zeros(self.epochs + 1)
@@ -77,31 +76,29 @@ class LogisticRegression(Classifier):
 
         # make epoch go 1..epochs (not 0..epochs-1)
         for epoch in range(self.epochs+1)[1:]:
-            grad = np.zeros(self.weight.shape[0])
+            gradient = np.zeros(self.weight.shape[0])
 
-            if use_batch_mse:
+            for input, label in zip(self.trainingSet.input,
+                                    self.trainingSet.label):
 
-                # compute output for all instances
-                outputs = map(self.fire, self.trainingSet.input)
-                targets = self.trainingSet.label
+                output = self.fire(input)
+                target = label
 
-                error = lossMSE.calculateError(targets, outputs)
+                if use_sse:
 
-                # how to calculate the gradient out of this?
-                # grad = ??
+                    # use SSE
+                    error = lossSSE.calculateError(target, output)
 
-                self.updateWeights(grad)
+                    # gradient for SSE+sigmoid:
+                    # dE/dw = - sum(x in X) of [ (t_x - o_x) * o_x * (1 - o_x) * x ]
+                    gradient += - (target - output) * output * (1 - output) * input
 
-            else:
-                # classical approach with different error
-                for input, label in zip(self.trainingSet.input,
-                                        self.trainingSet.label):
-                    output = self.fire(input)
-
+                else:
+                    # classical approach with different error
                     error = lossDE.calculateError(label, output)
-                    grad += error * input
+                    gradient += - error * input
 
-                self.updateWeights(grad)
+                self.updateWeights(gradient)
 
             if verbose:
                 self.trackAccuracy(epoch)
@@ -143,8 +140,8 @@ class LogisticRegression(Classifier):
         # set.
         return list(map(self.classify, test))
 
-    def updateWeights(self, grad):
-        self.weight += self.learningRate * grad
+    def updateWeights(self, gradient):
+        self.weight += - self.learningRate * gradient
 
     def fire(self, input):
         # Look at how we change the activation function here!!!!
