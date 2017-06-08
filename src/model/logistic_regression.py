@@ -52,6 +52,7 @@ class LogisticRegression(Classifier):
 
         self.accuracyValid = np.zeros(self.epochs + 1)
         self.accuracyTest = np.zeros(self.epochs + 1)
+        self.error = np.zeros(self.epochs)
 
     def train(self, verbose=True):
         """Train the Logistic Regression.
@@ -70,6 +71,7 @@ class LogisticRegression(Classifier):
 
         self.accuracyValid = np.zeros(self.epochs + 1)
         self.accuracyTest = np.zeros(self.epochs + 1)
+        self.error = np.zeros(self.epochs + 1)
 
         if verbose:
             self.trackAccuracy(0)
@@ -77,6 +79,8 @@ class LogisticRegression(Classifier):
         # make epoch go 1..epochs (not 0..epochs-1)
         for epoch in range(self.epochs+1)[1:]:
             gradient = np.zeros(self.weight.shape[0])
+
+            sumError = 0
 
             for input, label in zip(self.trainingSet.input,
                                     self.trainingSet.label):
@@ -98,13 +102,16 @@ class LogisticRegression(Classifier):
                     error = lossDE.calculateError(label, output)
                     gradient += - error * input
 
+                sumError += abs(error)
                 self.updateWeights(gradient)
 
             if verbose:
                 self.trackAccuracy(epoch)
+                self.trackError(epoch, sumError)
 
         if verbose:
             self.plotAccuracy()
+            self.plotError()
 
 
     def classify(self, testInstance):
@@ -169,7 +176,6 @@ class LogisticRegression(Classifier):
 
         return validAcc
 
-
     def plotAccuracy(self):
         epoch_axis = np.linspace(0, self.epochs, self.epochs + 1, endpoint=True)
         plt.plot(epoch_axis, self.accuracyValid, label="Accuracy (validation set)")
@@ -182,5 +188,19 @@ class LogisticRegression(Classifier):
 
         plt.show()
 
+
+    def trackError(self, epoch, error):
+        self.error[epoch] = error
+
+    def plotError(self):
+        epoch_axis = np.linspace(1, self.epochs, self.epochs, endpoint=True)
+        plt.plot(epoch_axis, self.error[1:], label="Error")
+        plt.legend(loc="lower right")
+
+        if not os.path.exists("plots"):
+            os.makedirs("plots")
+        plt.savefig("plots/error.png", dpi=100)
+
+        plt.show()
 
 
