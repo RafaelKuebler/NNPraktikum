@@ -68,6 +68,8 @@ class Activation:
         # Here you have to code the softmax function
 
         # softmax: e^(net_j) / sum(k) of (e^net_k)
+        # If netOutput is a vector (list), the numerator would have to index
+        # the respective unit (should be provided as argument, i.m.o. - Rainer)
         return np.exp(netOutput) / np.sum(np.exp(netOutput))
 
     @staticmethod
