@@ -72,10 +72,13 @@ class SumSquaredError(Error):
     def errorString(self):
         self.errorString = 'sse'
 
-    def calculateError(self, target, output):
+    def calculateError(self, target, output, singleInstance=False):
         # SSE = 1/2*sum (i=1 to n) of (target_i - output_i)^2)
         # simplified the code (here mind 1/2)
-        return 1/2 * np.sum((target - output) ** 2)
+        if singleInstance:
+            return 0.5 * (float(target) - output) ** 2
+        else:
+            return 0.5 * np.sum((target - output) ** 2)
 
 
 class BinaryCrossEntropyError(Error):
