@@ -52,7 +52,7 @@ class LogisticRegression(Classifier):
 
         self.accuracyValid = np.zeros(self.epochs + 1)
         self.accuracyTest = np.zeros(self.epochs + 1)
-        self.error = np.zeros(self.epochs)
+        self.error = np.zeros(self.epochs + 1)
 
     def train(self, verbose=True):
         """Train the Logistic Regression.
@@ -66,8 +66,11 @@ class LogisticRegression(Classifier):
         use_sse = False
 
         from util.loss_functions import DifferentError, SumSquaredError
-        lossDE = DifferentError()
-        lossSSE = SumSquaredError()
+        if use_sse:
+            loss = SumSquaredError()
+        else:
+            loss = DifferentError()
+
 
         self.accuracyValid = np.zeros(self.epochs + 1)
         self.accuracyTest = np.zeros(self.epochs + 1)
@@ -75,23 +78,24 @@ class LogisticRegression(Classifier):
 
         if verbose:
             self.trackAccuracy(0)
+            self.trackError(0, self.computeError(loss))
 
         # make epoch go 1..epochs (not 0..epochs-1)
         for epoch in range(self.epochs+1)[1:]:
             gradient = np.zeros(self.weight.shape[0])
 
-            sumError = 0
+            errorSum = 0
 
             for input, label in zip(self.trainingSet.input,
                                     self.trainingSet.label):
 
-                output = self.fire(input)
-                target = label
+                output = float(self.fire(input))
+                target = float(label)
 
                 if use_sse:
 
                     # use SSE
-                    error = lossSSE.calculateError(target, output)
+                    error = loss.calculateError(target, output)
 
                     # gradient for SSE+sigmoid:
                     # dE/dw = - sum(x in X) of [ (t_x - o_x) * o_x * (1 - o_x) * x ]
@@ -99,15 +103,19 @@ class LogisticRegression(Classifier):
 
                 else:
                     # classical approach with different error
-                    error = lossDE.calculateError(label, output)
+                    error = loss.calculateError(label, output)
                     gradient += - error * input
 
-                sumError += abs(error)
-                self.updateWeights(gradient)
+                errorSum += abs(error)
+
+            # logging.info("Gradient mean: {}".format(sum(gradient)/float(len(gradient))))
+            self.updateWeights(gradient)
+
+            errorMean = float(errorSum) / len(self.trainingSet.input)
 
             if verbose:
                 self.trackAccuracy(epoch)
-                self.trackError(epoch, sumError)
+                self.trackError(epoch, errorMean)
 
         if verbose:
             self.plotAccuracy()
@@ -189,12 +197,16 @@ class LogisticRegression(Classifier):
         plt.show()
 
 
-    def trackError(self, epoch, error):
+    def trackError(self, epoch, error, log=True):
         self.error[epoch] = error
+        if log:
+            logging.info("Epoch {}: Error = {}".format(epoch, error))
 
     def plotError(self):
-        epoch_axis = np.linspace(1, self.epochs, self.epochs, endpoint=True)
-        plt.plot(epoch_axis, self.error[1:], label="Error")
+        epoch_axis = np.linspace(0, self.epochs, self.epochs + 1, endpoint=True)
+        plt.plot(epoch_axis, self.error, label="Error")
+        plt.xlim(0, self.epochs)
+        plt.ylim(0, max(self.error) * 1.2)
         plt.legend(loc="lower right")
 
         if not os.path.exists("plots"):
@@ -202,5 +214,13 @@ class LogisticRegression(Classifier):
         plt.savefig("plots/error.png", dpi=100)
 
         plt.show()
+
+    def computeError(self, loss):
+        trainingData = zip(self.trainingSet.input, self.trainingSet.label)
+        errors = [loss.calculateError(target, self.fire(input))
+                  for input, target in trainingData]
+        return float(sum(errors)) / len(self.trainingSet.input)
+
+
 
 
