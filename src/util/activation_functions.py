@@ -43,36 +43,32 @@ class Activation:
 
     @staticmethod
     def rectified(netOutput):
-        return lambda x: max(0.0, x)
+        return max(0.0, netOutput)
 
     @staticmethod
     def rectifiedPrime(netOutput):
         # Here you have to code the derivative of rectified linear function
-        # my reasoning:
-        # f(x<=0) = 0
-        # f(x>0)  = 1
         if netOutput <= 0:
-            return 0
+            return 0.
         else:
-            return 1
+            return 1.
 
     @staticmethod
     def identity(netOutput):
-        return lambda x: x
+        return netOutput
 
     @staticmethod
     def identityPrime(netOutput):
         # Here you have to code the derivative of identity function
-        return 1
+        return 1.
 
     @staticmethod
-    def softmax(netOutput):
+    def softmax(netOutputs, unitIndex):
         # Here you have to code the softmax function
 
         # softmax: e^(net_j) / sum(k) of (e^net_k)
-        # If netOutput is a vector (list), the numerator would have to index
-        # the respective unit (should be provided as argument, i.m.o. - Rainer)
-        return np.exp(netOutput) / np.sum(np.exp(netOutput))
+        # netOutputs = { net_k }, j = unitIndex
+        return np.exp(netOutputs[unitIndex]) / np.sum(np.exp(netOutputs))
 
     @staticmethod
     def getActivation(str):
