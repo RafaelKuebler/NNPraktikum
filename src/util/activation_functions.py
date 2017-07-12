@@ -6,7 +6,7 @@ Activation functions which can be used within neurons.
 
 from numpy import exp
 from numpy import divide
-
+import numpy as np
 
 class Activation:
     """
@@ -26,7 +26,7 @@ class Activation:
     def sigmoidPrime(netOutput):
         # Here you have to code the derivative of sigmoid function
         # netOutput.*(1-netOutput)
-        pass
+        return Activation.sigmoid(netOutput) * (1 - Activation.sigmoid(netOutput))
 
     @staticmethod
     def tanh(netOutput):
@@ -38,7 +38,8 @@ class Activation:
     @staticmethod
     def tanhPrime(netOutput):
         # Here you have to code the derivative of tanh function
-        pass
+        # d/dx tanh(x) = 1 - tanh^2(x)
+        return 1 - Activation.tanh(netOutput) ** 2
 
     @staticmethod
     def rectified(netOutput):
@@ -47,7 +48,13 @@ class Activation:
     @staticmethod
     def rectifiedPrime(netOutput):
         # Here you have to code the derivative of rectified linear function
-        pass
+        # my reasoning:
+        # f(x<=0) = 0
+        # f(x>0)  = 1
+        if netOutput <= 0:
+            return 0
+        else:
+            return 1
 
     @staticmethod
     def identity(netOutput):
@@ -56,12 +63,16 @@ class Activation:
     @staticmethod
     def identityPrime(netOutput):
         # Here you have to code the derivative of identity function
-        pass
+        return 1
 
     @staticmethod
     def softmax(netOutput):
         # Here you have to code the softmax function
-        pass
+
+        # softmax: e^(net_j) / sum(k) of (e^net_k)
+        # If netOutput is a vector (list), the numerator would have to index
+        # the respective unit (should be provided as argument, i.m.o. - Rainer)
+        return np.exp(netOutput) / np.sum(np.exp(netOutput))
 
     @staticmethod
     def getActivation(str):
