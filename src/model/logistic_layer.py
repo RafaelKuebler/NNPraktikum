@@ -100,17 +100,17 @@ class LogisticLayer:
         # - no bias
 
         # that means:
-        # [y1]   [ w11 w21 w31 ]   [x1]
+        # [y1]   [ w11 w12 w13 ]   [x1]
         # [  ] = [             ] * [x2]
-        # [y2]   [ w12 w22 w32 ]   [x3]
+        # [y2]   [ w21 w22 w23 ]   [x3]
         #
-        # wij = weight from input i to output j
+        # wji = weight from input i to output/unit j
 
         # therefore:
         #  <--  nIn  -->
-        # [ w11 w21 w31 ] ^
+        # [ w11 w12 w13 ] ^
         # [             ] nOut
-        # [ w12 w22 w32 ] v
+        # [ w21 w22 w23 ] v
         #
         # np shape = (vertical, horizontal)
         # => weights.shape = (nOut, nIn)
@@ -121,8 +121,8 @@ class LogisticLayer:
         # Include bias => replace nIn with nIn+1
         #
         #                              [ 1]
-        # [y1] = [ w01 w11 w21 w31 ] * [x1]
-        # [y2]   [ w02 w12 w22 w32 ]   [x2]
+        # [y1] = [ w10 w11 w12 w13 ] * [x1]
+        # [y2]   [ w20 w21 w22 w23 ]   [x2]
         #                              [x3]
         # => weights.shape = (nOut, nIn + 1)
         # => input.shape = (nIn+1, 1)
@@ -150,6 +150,10 @@ class LogisticLayer:
         ndarray :
             a numpy array containing the partial derivatives on this layer
         """
+
+
+
+
         pass
 
     def updateWeights(self):
