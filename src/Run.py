@@ -5,6 +5,7 @@ from data.mnist_seven import MNISTSeven
 from model.stupid_recognizer import StupidRecognizer
 from model.perceptron import Perceptron
 from model.logistic_regression import LogisticRegression
+from model.logistic_layer import LogisticLayer
 from report.evaluator import Evaluator
 
 
@@ -25,6 +26,14 @@ def main():
                                         data.testSet,
                                         learningRate=0.005,
                                         epochs=30)                                        
+
+
+    trainingInstance = data.trainingSet.input[0]
+    myLogLayerClassificer = LogisticLayer(len(trainingInstance), 5, activation='softmax')
+
+    print(myLogLayerClassificer.forward(trainingInstance))
+
+
 
     # Train the classifiers
     print("=========================")
