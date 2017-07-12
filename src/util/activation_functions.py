@@ -63,12 +63,13 @@ class Activation:
         return 1.
 
     @staticmethod
-    def softmax(netOutputs, unitIndex):
+    def softmax(netOutput):
         # Here you have to code the softmax function
 
+        # netOutputs = { net_i }
         # softmax: e^(net_j) / sum(k) of (e^net_k)
-        # netOutputs = { net_k }, j = unitIndex
-        return np.exp(netOutputs[unitIndex]) / np.sum(np.exp(netOutputs))
+        # sum => scalar, / => element-wise division of e^net_j by sum(e^net_k)
+        return np.exp(netOutput) / np.sum(np.exp(netOutput))
 
     @staticmethod
     def getActivation(str):
