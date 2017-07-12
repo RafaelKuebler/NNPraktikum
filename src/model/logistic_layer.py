@@ -4,10 +4,10 @@ import time
 import numpy as np
 
 from util.activation_functions import Activation
-from model.layer import Layer
+#from model.layer import Layer
 
 
-class LogisticLayer(Layer):
+class LogisticLayer:
     """
     A layer of perceptrons acting as the output layer
 
@@ -77,14 +77,62 @@ class LogisticLayer(Layer):
         Parameters
         ----------
         input : ndarray
-            a numpy array (1,nIn + 1) containing the input of the layer
+            a numpy array (nIn + 1,1) containing the input of the layer
 
         Returns
         -------
         ndarray :
-            a numpy array (1,nOut) containing the output of the layer
+            a numpy array (nOut, 1) containing the output of the layer
         """
-        pass
+
+        # numpy indexing: array[vertical][horizontal]
+        #
+        # [ 00, 01, 02 ]  |
+        # [ 10, 11, 12 ] dim0
+        # [ 20, 21, 22 ]  v
+        #  --  dim1  -->
+
+
+        # Visualization of input, weight, and output:
+        # assume:
+        # - 3 features X = [x1, x2, x3]
+        # - 2 outputs  Y = [y1, y2]
+        # - no bias
+
+        # that means:
+        # [y1]   [ w11 w21 w31 ]   [x1]
+        # [  ] = [             ] * [x2]
+        # [y2]   [ w12 w22 w32 ]   [x3]
+        #
+        # wij = weight from input i to output j
+
+        # therefore:
+        #  <--  nIn  -->
+        # [ w11 w21 w31 ] ^
+        # [             ] nOut
+        # [ w12 w22 w32 ] v
+        #
+        # np shape = (vertical, horizontal)
+        # => weights.shape = (nOut, nIn)
+        # => input.shape = (nIn, 1)
+        # => output.shape = (nOut, 1)
+
+
+        # Include bias => replace nIn with nIn+1
+        #
+        #                              [ 1]
+        # [y1] = [ w01 w11 w21 w31 ] * [x1]
+        # [y2]   [ w02 w12 w22 w32 ]   [x2]
+        #                              [x3]
+        # => weights.shape = (nOut, nIn + 1)
+        # => input.shape = (nIn+1, 1)
+
+        # add bias
+        self.input[1:, 0] = input
+        netOutputs = np.dot(self.weights, self.input)
+        self.output = self.activation(netOutputs)
+
+        return self.output
 
     def computeDerivative(self, nextDerivatives, nextWeights):
         """
