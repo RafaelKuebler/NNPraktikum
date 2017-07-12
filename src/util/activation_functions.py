@@ -72,6 +72,15 @@ class Activation:
         return np.exp(netOutput) / np.sum(np.exp(netOutput))
 
     @staticmethod
+    def softmaxPrime(netOutput):
+        # from 2016 slides (p. 20):
+        # d phi(a_j) / d a_j = phi(a_j) * (1 - phi(a_j))
+        # => compute softmax(x), elementwise application of formula
+        softmax = Activation.softmax(netOutput)
+        prime = softmax * (1 - softmax)
+        return prime
+
+    @staticmethod
     def getActivation(str):
         """
         Returns the activation function corresponding to the given string
