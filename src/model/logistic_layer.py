@@ -41,12 +41,13 @@ class LogisticLayer:
     """
 
     def __init__(self, nIn, nOut, weights=None,
-                 activation='softmax', isClassifierLayer=True):
+                 activation='softmax', learningRate=0.1, isClassifierLayer=True):
 
         # Get activation function from string
         # Notice the functional programming paradigms of Python + Numpy
         self.activationString = activation
         self.activation = Activation.getActivation(self.activationString)
+        self.activationPrime = Activation.getDerivative(self.activationString)
 
         self.nIn = nIn
         self.nOut = nOut
@@ -54,7 +55,10 @@ class LogisticLayer:
         # Adding bias
         self.input = np.ndarray((nIn+1, 1))
         self.input[0] = 1
+
+        self.netOutputs = np.ndarray((nOut, 1))
         self.output = np.ndarray((nOut, 1))
+
         self.delta = np.zeros((nOut, 1))
 
         # You can have better initialization here
@@ -64,11 +68,14 @@ class LogisticLayer:
         else:
             self.weights = weights
 
+        self.learningRate = learningRate
         self.isClassifierLayer = isClassifierLayer
 
         # Some handy properties of the layers
         self.size = self.nOut
         self.shape = self.weights.shape
+
+        self.weightUpdate = np.zeros(self.weights.shape)
 
     def forward(self, input):
         """
@@ -129,8 +136,8 @@ class LogisticLayer:
 
         # add bias
         self.input[1:, 0] = input[:, 0]
-        netOutputs = np.dot(self.weights, self.input)
-        self.output = self.activation(netOutputs)
+        self.netOutputs = np.dot(self.weights, self.input)
+        self.output = self.activation(self.netOutputs)
 
         return self.output
 
@@ -166,11 +173,28 @@ class LogisticLayer:
         #   outputs = output layer
         #   w_kh = weight associated with k-th input to unit h
 
+
+        # o_k (1 - o_k) holds for sigmoid. (o_k = sigmoid'(net_k))
+        # More general, for activation function phi it is:
+        # d phi(net_k) / d net_k, or phi'(net_k)
+
+        # Therefore, more general, it holds:
+        #
+        # For each output unit k, calculate its error term delta_k:
+        # delta_k <-- activationPrime(net_k) * (t_k - o_k)
+        #
+        # For each hidden unit h, calculate its error term delta_h:
+        # delta_h <-- activationPrime(net_k) * sum[k in outputs] (w_kh delta_k)
+        #
+        # ... I hope this is correct. - Rainer
+
+
+
         self.delta = np.ndarray((self.nOut, 1))
 
         if self.isClassifierLayer:
             # output layer
-            self.delta = self.output * (1 - self.output) * (target - self.output)
+            self.delta = self.activationPrime(self.netOutputs) * (target - self.output)
 
 
         else:
@@ -192,13 +216,16 @@ class LogisticLayer:
             # => np.dot(nextWeights[:,h], nextDerivatives) == sum_over_k (experimentally checked)
 
 
-            self.delta = self.output * (1 - self.output) * sums_over_k
+            self.delta = self.activationPrime(self.netOutputs) * sums_over_k
 
             # equivalent to: (checked)
             # for h in range(self.nOut):
-            #     self.delta[h] = self.output[h] * (1 - self.output[h]) * np.dot(nextWeights[:, h], nextDerivatives)
+            #     self.delta[h] = self.activationPrime(self.netOutputs) * np.dot(nextWeights[:, h], nextDerivatives)
 
         return self.delta
+
+    def accumulateWeightUpdates(self):
+        self.weightUpdate += self.learningRate * np.outer(self.delta, self.input)
 
     def updateWeights(self):
         """
@@ -213,18 +240,16 @@ class LogisticLayer:
         #
         # x_ji = i-th input to unit j
 
-
-        learningRate = 0.01
-
-
-        weightUpdate = np.ndarray(self.weights.shape)
-
         # j = unit
         # i = input
-        for j in range(len(self.output)):
-            for i in range(len(self.input)):
-                weightUpdate[j,i] = learningRate * self.delta[j] * self.input[i]
+        #for j in range(len(self.output)):
+        #    for i in range(len(self.input)):
+        #        weightUpdate[j,i] = self.delta[j] * self.input[i]
 
-        self.weights += weightUpdate
+        #weightUpdate = self.learningRate * np.outer(self.delta, self.input)
+
+
+        self.weights += self.weightUpdate
+        self.weightUpdate = np.zeros(self.weightUpdate.shape)
 
 
