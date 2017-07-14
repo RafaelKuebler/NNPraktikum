@@ -114,6 +114,8 @@ class Activation:
             return Activation.rectifiedPrime
         elif str == 'linear':
             return Activation.identityPrime
+        elif str == 'softmax':
+            return Activation.softmaxPrime
         else:
             raise ValueError('Cannot get the derivative of'
                              ' the activation function: ' + str)
