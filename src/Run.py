@@ -25,14 +25,7 @@ def main():
                                         data.validationSet,
                                         data.testSet,
                                         learningRate=0.005,
-                                        epochs=30)                                        
-
-
-    trainingInstance = data.trainingSet.input[0]
-    myLogLayerClassificer = LogisticLayer(len(trainingInstance), 5, activation='softmax')
-
-    print(myLogLayerClassificer.forward(trainingInstance))
-
+                                        epochs=30)
 
 
     # Train the classifiers
@@ -73,7 +66,8 @@ def main():
     print("\nResult of the Logistic Regression recognizer:")
     # evaluator.printComparison(data.testSet, perceptronPred)    
     evaluator.printAccuracy(data.testSet, lrPred)
-    
-    
+
+
+
 if __name__ == '__main__':
     main()
