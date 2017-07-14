@@ -77,7 +77,7 @@ class LogisticLayer:
         Parameters
         ----------
         input : ndarray
-            a numpy array (nIn + 1,1) containing the input of the layer
+            a numpy array (nIn,1) containing the input of the layer
 
         Returns
         -------
@@ -128,22 +128,24 @@ class LogisticLayer:
         # => input.shape = (nIn+1, 1)
 
         # add bias
-        self.input[1:, 0] = input
+        self.input[1:, 0] = input[:, 0]
         netOutputs = np.dot(self.weights, self.input)
         self.output = self.activation(netOutputs)
 
         return self.output
 
-    def computeDerivative(self, nextDerivatives, nextWeights):
+    def computeDerivative(self, target, nextDerivatives, nextWeights):
         """
         Compute the derivatives (back)
 
         Parameters
         ----------
+        target : ndarray
+            a numpy array (nOut, 1) containing the target/label values of the training instance
         nextDerivatives: ndarray
-            a numpy array containing the derivatives from next layer
+            a numpy array (nOutputs, 1) containing the derivatives from next layer
         nextWeights : ndarray
-            a numpy array containing the weights from next layer
+            a numpy array (nOutputs, 1) containing the weights from this layer to the next layer
 
         Returns
         -------
@@ -151,13 +153,78 @@ class LogisticLayer:
             a numpy array containing the partial derivatives on this layer
         """
 
+        # Mitchell, p. 98 states: (MSE error function, sigmoid activation function)
+        #
+        # For each output unit k, calculate its error term delta_k:
+        # delta_k <-- o_k (1 - o_k)(t_k - o_k)
+        #
+        # For each hidden unit h, calculate its error term delta_h:
+        # delta_h <-- o_h (1 - o_h) * sum[k in outputs] (w_kh delta_k)
+        #
+        # where:
+        #   o = output, t = target
+        #   outputs = output layer
+        #   w_kh = weight associated with k-th input to unit h
+
+        self.delta = np.ndarray((self.nOut, 1))
+
+        if self.isClassifierLayer:
+            # output layer
+            self.delta = self.output * (1 - self.output) * (target - self.output)
 
 
+        else:
+            # hidden layer
 
-        pass
+            # compute the sum (over k) for each h
+            sums_over_k = np.array([np.dot(nextWeights[:,h], nextDerivatives) for h in range(self.nOut)])
+
+            # np.dot(nextWeights, nextDerivatives) is equivalent to this:
+            # ----
+            # sum_over_k = 0
+            # for k in range(nOutputs):
+            #
+            #     w_kh = nextWeights[k, h]
+            #     delta_k = nextDerivatives[k]
+            #
+            #     sum_over_k += w_kh * delta_k
+            # ----
+            # => np.dot(nextWeights[:,h], nextDerivatives) == sum_over_k (experimentally checked)
+
+
+            self.delta = self.output * (1 - self.output) * sums_over_k
+
+            # equivalent to: (checked)
+            # for h in range(self.nOut):
+            #     self.delta[h] = self.output[h] * (1 - self.output[h]) * np.dot(nextWeights[:, h], nextDerivatives)
+
+        return self.delta
 
     def updateWeights(self):
         """
         Update the weights of the layer
         """
-        pass
+
+        # Mitchell, p. 98:
+        # Update each network weight w_ji
+        #     w_ji <-- wji + DeltaW_ji
+        # where
+        #     DeltaW_ji = learning rate * delta_j * x_ji
+        #
+        # x_ji = i-th input to unit j
+
+
+        learningRate = 0.01
+
+
+        weightUpdate = np.ndarray(self.weights.shape)
+
+        # j = unit
+        # i = input
+        for j in range(len(self.output)):
+            for i in range(len(self.input)):
+                weightUpdate[j,i] = learningRate * self.delta[j] * self.input[i]
+
+        self.weights += weightUpdate
+
+
