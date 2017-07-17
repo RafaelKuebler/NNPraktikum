@@ -4,11 +4,7 @@
 import numpy as np
 
 from data.mnist_seven import MNISTSeven
-from model.stupid_recognizer import StupidRecognizer
-from model.perceptron import Perceptron
-from model.logistic_regression import LogisticRegression
 from model.logistic_layer import LogisticLayer
-from report.evaluator import Evaluator
 
 
 def main():
@@ -17,8 +13,8 @@ def main():
 
     inputDim = len(data.trainingSet.input[0])
 
-    logisticLayerHidden = LogisticLayer(inputDim, 5, activation='sigmoid', isClassifierLayer=False)
-    logisticLayerOutput = LogisticLayer(5, 1, activation='sigmoid', isClassifierLayer=True)
+    logisticLayerHidden = LogisticLayer(inputDim, 5, learningRate=0.5, activation='sigmoid', isClassifierLayer=False)
+    logisticLayerOutput = LogisticLayer(5, 1, learningRate=0.5, activation='sigmoid', isClassifierLayer=True)
 
 
     input = np.ndarray((inputDim, 1))
@@ -43,16 +39,22 @@ def main():
     outputDerivative = logisticLayerOutput.computeDerivative(target, None, None)
     hiddenDerivative = logisticLayerHidden.computeDerivative(None, outputDerivative, logisticLayerOutput.weights)
 
-    print("Derivatives of Output Layer:\n{}".format(output))
-    print("Derivatives of Hidden Layer:\n{}".format(hiddenOutput))
+    print("Derivatives of Output Layer:\n{}".format(outputDerivative))
+    print("Derivatives of Hidden Layer:\n{}".format(hiddenDerivative))
 
 
     print("\nWeight Update...")
+
+    logisticLayerOutput.accumulateWeightUpdates()
+    logisticLayerHidden.accumulateWeightUpdates()
 
     logisticLayerOutput.updateWeights()
     logisticLayerHidden.updateWeights()
 
     print("Done.")
+
+    print("\nNew output:")
+    print("{}".format(logisticLayerOutput.forward(logisticLayerHidden.forward(input))))
 
 
 if __name__ == '__main__':

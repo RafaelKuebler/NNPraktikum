@@ -27,7 +27,6 @@ def main():
                                         learningRate=0.005,
                                         epochs=30)
 
-
     # Train the classifiers
     print("=========================")
     print("Training..")
