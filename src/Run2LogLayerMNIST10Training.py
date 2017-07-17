@@ -13,10 +13,11 @@ def main():
                                                     oneHot=False)
 
     inputDim = len(data.trainingSet.input[0])
-    hiddenDim = inputDim / 2
+    hiddenDim = 2*inputDim
     outputDim = 10
     epochs = 30
-    learningRate = 1.1
+    learningRate = 0.1
+    batchGD = True
 
     logisticLayerHidden = LogisticLayer(inputDim, hiddenDim, activation='sigmoid',
                                         learningRate=learningRate, isClassifierLayer=False)
@@ -25,7 +26,7 @@ def main():
 
     print("\nTraining parameters:")
     print("  Topolgoy: [{}] (input) -> [{}] (hidden) -> [{}] (output)".format(inputDim, hiddenDim, outputDim))
-    print("  Epochs: {}, Learning Rate: {}".format(epochs, learningRate))
+    print("  Epochs: {}, Learning Rate: {}, BatchGD: {}".format(epochs, learningRate, batchGD))
 
     trainingData = zip(data.trainingSet.input, data.trainingSet.label)
     random.shuffle(trainingData)
@@ -33,6 +34,7 @@ def main():
     print("\n------------")
     print("| Training |")
     print("------------\n")
+
     for epoch in range(epochs):
 
         print("----------------------")
@@ -71,8 +73,9 @@ def main():
             logisticLayerOutput.accumulateWeightUpdates()
             logisticLayerHidden.accumulateWeightUpdates()
 
-        logisticLayerOutput.updateWeights()
-        logisticLayerHidden.updateWeights()
+            if not batchGD:
+                logisticLayerOutput.updateWeights()
+                logisticLayerHidden.updateWeights()
 
 
         # metrics[result][label]
@@ -83,7 +86,12 @@ def main():
         print("---------------------")
 
         for i in range(10):
-            print("  {}   | {:>4} | {}".format(i, hits[i], misses[i]))
+            print("  {}   | {:>4} | {:>6}".format(i, hits[i], misses[i]))
+
+        if batchGD:
+            print("Weight update...")
+            logisticLayerOutput.updateWeights()
+            logisticLayerHidden.updateWeights()
 
 
 if __name__ == '__main__':
