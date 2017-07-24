@@ -125,7 +125,6 @@ class LogisticRegression(Classifier):
             # Compute the derivatives w.r.t to the error
             # Please note the treatment of nextDerivatives and nextWeights
             # in case of an output layer
-            #self.layer.computeDerivative(self.layer.outp - label, 1.0)
             self.layer.computeDerivative(self.loss.calculateDerivative(
                                          label,self.layer.outp), 1.0)
 
