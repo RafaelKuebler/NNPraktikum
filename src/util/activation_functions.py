@@ -6,6 +6,8 @@ Activation functions which can be used within neurons.
 
 from numpy import exp
 from numpy import divide
+from numpy import ones
+from numpy import asarray
 
 
 class Activation:
@@ -26,7 +28,7 @@ class Activation:
     def sigmoidPrime(netOutput):
         # Here you have to code the derivative of sigmoid function
         # netOutput.*(1-netOutput)
-        pass
+        return netOutput * (1.0 - netOutput)
 
     @staticmethod
     def tanh(netOutput):
@@ -38,30 +40,38 @@ class Activation:
     @staticmethod
     def tanhPrime(netOutput):
         # Here you have to code the derivative of tanh function
-        pass
+        return (1-Activation.tanh(netOutput)**2)
 
     @staticmethod
     def rectified(netOutput):
-        return lambda x: max(0.0, x)
+        return asarray([max(0.0, i) for i in netOutput])
 
     @staticmethod
     def rectifiedPrime(netOutput):
-        # Here you have to code the derivative of rectified linear function
-        pass
+        # reluPrime=1 if netOutput > 0 otherwise 0
+        #print(type(netOutput))
+        return netOutput>0
 
     @staticmethod
     def identity(netOutput):
-        return lambda x: x
+        return netOutput
 
     @staticmethod
     def identityPrime(netOutput):
-        # Here you have to code the derivative of identity function
-        pass
+        # identityPrime = 1
+        return ones(netOutput.size)
 
     @staticmethod
     def softmax(netOutput):
         # Here you have to code the softmax function
-        pass
+        ex = exp(netOutput)
+        return ex/sum(ex)
+    
+    @staticmethod
+    def softmaxPrime(netOutput):
+        # Here you have to code the softmax function
+        sm = Activation.softmax(netOutput)
+        return sm - sm**2
 
     @staticmethod
     def getActivation(str):
@@ -91,6 +101,8 @@ class Activation:
 
         if str == 'sigmoid':
             return Activation.sigmoidPrime
+        elif str == 'softmax':
+            return Activation.softmaxPrime
         elif str == 'tanh':
             return Activation.tanhPrime
         elif str == 'relu':

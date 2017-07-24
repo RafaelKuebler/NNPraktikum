@@ -4,9 +4,13 @@ import sys
 import logging
 
 import numpy as np
+from sklearn.metrics import accuracy_score
 
-from util.activation_functions import Activation
+# from util.activation_functions import Activation
 from model.classifier import Classifier
+from model.logistic_layer import LogisticLayer
+
+from util.loss_functions import *
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.DEBUG,
@@ -30,12 +34,14 @@ class LogisticRegression(Classifier):
     trainingSet : list
     validationSet : list
     testSet : list
-    weight : list
     learningRate : float
     epochs : positive int
+    performances: array of floats
     """
 
-    def __init__(self, train, valid, test, learningRate=0.01, epochs=50):
+    def __init__(self, train, valid, test, 
+                 learningRate=0.01, epochs=50,
+                 loss='bce'):
 
         self.learningRate = learningRate
         self.epochs = epochs
@@ -43,9 +49,37 @@ class LogisticRegression(Classifier):
         self.trainingSet = train
         self.validationSet = valid
         self.testSet = test
+        
+        if loss == 'bce':
+            self.loss = BinaryCrossEntropyError()
+        elif loss == 'sse':
+            self.loss = SumSquaredError()
+        elif loss == 'mse':
+            self.loss = MeanSquaredError()
+        elif loss == 'different':
+            self.loss = DifferentError()
+        elif loss == 'absolute':
+            self.loss = AbsoluteError()
+        else:
+            raise ValueError('There is no predefined loss function ' +
+                             'named ' + str)
+                             
+        
+        # Record the performance of each epoch for later usages
+        # e.g. plotting, reporting..
+        self.performances = []
 
-        # Initialize the weight vector with small values
-        self.weight = 0.01*np.random.randn(self.trainingSet.input.shape[1])
+        # Use a logistic layer as one-neuron classification (output) layer
+        self.layer = LogisticLayer(train.input.shape[1], 1, 
+                                   activation='sigmoid', 
+                                   isClassifierLayer=True)
+
+        # add bias values ("1"s) at the beginning of all data sets
+        self.trainingSet.input = np.insert(self.trainingSet.input, 0, 1,
+                                            axis=1)
+        self.validationSet.input = np.insert(self.validationSet.input, 0, 1,
+                                              axis=1)
+        self.testSet.input = np.insert(self.testSet.input, 0, 1, axis=1)
 
     def train(self, verbose=True):
         """Train the Logistic Regression.
@@ -56,52 +90,64 @@ class LogisticRegression(Classifier):
             Print logging messages with validation accuracy if verbose is True.
         """
 
-        from util.loss_functions import DifferentError
-        loss = DifferentError()
+        # Run the training "epochs" times, print out the logs
+        for epoch in range(self.epochs):
+            if verbose:
+                print("Training epoch {0}/{1}.."
+                      .format(epoch + 1, self.epochs))
 
-        learned = False
-        iteration = 0
-
-        while not learned:
-            grad = 0
-            totalError = 0
-            for input, label in zip(self.trainingSet.input,
-                                    self.trainingSet.label):
-                output = self.fire(input)
-                # compute gradient
-                grad += -(label - output)*input
-
-                # compute recognizing error, not BCE
-                predictedLabel = self.classify(input)
-                error = loss.calculateError(label, predictedLabel)
-                totalError += error
-
-            self.updateWeights(grad)
-            totalError = abs(totalError)
-            
-            iteration += 1
+            self._train_one_epoch()
 
             if verbose:
-                logging.info("Epoch: %i; Error: %i", iteration, totalError)
-                
+                accuracy = accuracy_score(self.validationSet.label,
+                                          self.evaluate(self.validationSet))
+                # Record the performance of each epoch for later usages
+                # e.g. plotting, reporting..
+                self.performances.append(accuracy)
+                print("Accuracy on validation: {0:.2f}%"
+                      .format(accuracy * 100))
+                print("-----------------------------")
 
-            if totalError == 0 or iteration >= self.epochs:
-                # stop criteria is reached
-                learned = True
+    def _train_one_epoch(self):
+        """
+        Train one epoch, seeing all input instances
+        """
 
-    def classify(self, testInstance):
+        for img, label in zip(self.trainingSet.input,
+                              self.trainingSet.label):
+
+            # Use LogisticLayer to do the job
+            # Feed it with inputs
+
+            # Do a forward pass to calculate the output and the error
+            self.layer.forward(img)
+
+            # Compute the derivatives w.r.t to the error
+            # Please note the treatment of nextDerivatives and nextWeights
+            # in case of an output layer
+            #self.layer.computeDerivative(self.layer.outp - label, 1.0)
+            self.layer.computeDerivative(self.loss.calculateDerivative(
+                                         label,self.layer.outp), 1.0)
+
+            # Update weights in the online learning fashion
+            self.layer.updateWeights(self.learningRate)
+
+    def classify(self, test_instance):
         """Classify a single instance.
 
         Parameters
         ----------
-        testInstance : list of floats
+        test_instance : list of floats
 
         Returns
         -------
         bool :
             True if the testInstance is recognized as a 7, False otherwise.
         """
-        return self.fire(testInstance) > 0.5
+
+        # Here you have to implement classification method given an instance
+        outp = self.layer.forward(test_instance)
+        return outp > 0.5
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.
@@ -122,8 +168,9 @@ class LogisticRegression(Classifier):
         # set.
         return list(map(self.classify, test))
 
-    def updateWeights(self, grad):
-        self.weight -= self.learningRate*grad
-
-    def fire(self, input):
-        return Activation.sigmoid(np.dot(np.array(input), self.weight))
+    def __del__(self):
+        # Remove the bias from input data
+        self.trainingSet.input = np.delete(self.trainingSet.input, 0, axis=1)
+        self.validationSet.input = np.delete(self.validationSet.input, 0,
+                                              axis=1)
+        self.testSet.input = np.delete(self.testSet.input, 0, axis=1)

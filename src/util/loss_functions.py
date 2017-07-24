@@ -24,6 +24,11 @@ class Error:
     def calculateError(self, target, output):
         # calculate the error between target and output
         pass
+        
+    @abstractmethod
+    def calculateDerivative(self, target, output):
+        # calculate the error between target and output
+        pass
 
 
 class AbsoluteError(Error):
@@ -36,6 +41,9 @@ class AbsoluteError(Error):
     def calculateError(self, target, output):
         # It is the numbers of differences between target and output
         return abs(target - output)
+        
+    def calculateDerivative(self, target, output):
+        pass
 
 
 class DifferentError(Error):
@@ -48,6 +56,9 @@ class DifferentError(Error):
     def calculateError(self, target, output):
         # It is the numbers of differences between target and output
         return target - output
+    
+    def calculateDerivative(self, target, output):
+        return -1
 
 
 class MeanSquaredError(Error):
@@ -60,7 +71,13 @@ class MeanSquaredError(Error):
 
     def calculateError(self, target, output):
         # MSE = 1/n*sum (i=1 to n) of (target_i - output_i)^2)
-        pass
+        n = np.asarray(target).size
+        return (1.0/n) * np.sum((target - output)**2)
+    
+    def calculateDerivative(self, target, output):
+        # MSEPrime = -n/2*(target - output)
+        n = np.asarray(target).size
+        return (2.0/n) * (output - target)
 
 
 class SumSquaredError(Error):
@@ -73,7 +90,11 @@ class SumSquaredError(Error):
 
     def calculateError(self, target, output):
         # SSE = 1/2*sum (i=1 to n) of (target_i - output_i)^2)
-        pass
+        return 0.5*np.sum((target - output)**2)
+        
+    def calculateDerivative(self, target, output):
+        # SSEPrime = -(target - output)
+        return output - target
 
 
 class BinaryCrossEntropyError(Error):
@@ -85,8 +106,12 @@ class BinaryCrossEntropyError(Error):
         self.errorString = 'bce'
 
     def calculateError(self, target, output):
-        pass
-
+        return np.sum(target*log(output) + (1-target)*log(1-output))
+        
+    def calculateDerivative(self, target, output):
+        # BCEPrime = -target/output + (1-target)/(1-output)
+        return -target/output + (1-target)/(1-output)
+ 
 
 class CrossEntropyError(Error):
     """
@@ -97,4 +122,7 @@ class CrossEntropyError(Error):
         self.errorString = 'crossentropy'
 
     def calculateError(self, target, output):
+        pass
+        
+    def calculateDerivativer(self, target, output):
         pass

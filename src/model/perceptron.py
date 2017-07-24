@@ -44,9 +44,14 @@ class Perceptron(Classifier):
         self.testSet = test
 
         # Initialize the weight vector with small random values
-        # around 0 and0.1
-        self.weight = np.random.rand(self.trainingSet.input.shape[1])/100
+        # around 0 and 0.1
 
+        self.weight = np.random.rand(self.trainingSet.input.shape[1])/10
+
+        # add bias weights at the beginning with the same random initialize
+        self.weight = np.insert(self.weight, 0, np.random.rand()/10)
+
+        
     def train(self, verbose=True):
         """Train the perceptron with the perceptron learning algorithm.
 
@@ -122,3 +127,5 @@ class Perceptron(Classifier):
     def fire(self, input):
         """Fire the output of the perceptron corresponding to the input """
         return Activation.sign(np.dot(np.array(input), self.weight))
+        
+        

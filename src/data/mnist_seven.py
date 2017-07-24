@@ -19,6 +19,12 @@ class MNISTSeven(object):
         Number of validation examples.
     numTest : int
         Number of test examples.
+    oneHot: bool
+        If this flag is set, then all labels which are not `targetDigit` will
+        be transformed to False and `targetDigit` bill be transformed to True.
+        Set it to False for full MNIST task
+    targetDigit : string
+        Label of the dataset, e.g. '7'.
 
     Attributes
     ----------
