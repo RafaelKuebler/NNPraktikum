@@ -132,7 +132,7 @@ class LogisticLayer:
 
 
         self.input = input
-        self.netOutputs = np.dot(self.weights, self.input)
+        self.netOutputs = np.dot(self.input, self.weights)
         self.output = self.activation(self.netOutputs)
 
         return self.output
@@ -177,10 +177,10 @@ class LogisticLayer:
         # Page 40 Back-propagation slides
 
         if self.isClassifierLayer:
-            self.deltas = self.activationPrime(self.netOutputs) \
+            self.deltas = self.activationDerivative(self.netOutputs) \
                           * (next_derivatives - self.output)
         else:
-            self.deltas = self.activationPrime(self.netOutputs) \
+            self.deltas = self.activationDerivative(self.netOutputs) \
                           * np.dot(next_derivatives, next_weights)
 
         # Or you can have two computeDerivative methods, feel free to call
