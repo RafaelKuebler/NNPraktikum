@@ -87,3 +87,9 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# Pycharm project files
+.idea
+
+# plot directory
+plots/

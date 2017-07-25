@@ -1,3 +1,4 @@
+
 import time
 
 import numpy as np
@@ -5,9 +6,9 @@ import numpy as np
 from util.activation_functions import Activation
 
 
-class LogisticLayer():
+class LogisticLayer:
     """
-    A layer of neural
+    A layer of perceptrons acting as the output layer
 
     Parameters
     ----------
@@ -50,9 +51,13 @@ class LogisticLayer():
         self.nIn = nIn
         self.nOut = nOut
 
-        self.inp = np.ndarray((nIn+1, 1))
-        self.inp[0] = 1
-        self.outp = np.ndarray((nOut, 1))
+        # Adding bias
+        self.input = np.ndarray((nIn+1, 1))
+        self.input[0] = 1
+
+        self.netOutputs = np.ndarray((nOut, 1))
+        self.output = np.ndarray((nOut, 1))
+
         self.deltas = np.zeros((nOut, 1))
 
         # You can have better initialization here
@@ -69,27 +74,68 @@ class LogisticLayer():
         self.size = self.nOut
         self.shape = self.weights.shape
 
-    def forward(self, inp):
+    def forward(self, input):
         """
         Compute forward step over the input using its weights
 
         Parameters
         ----------
-        inp : ndarray
+        input : ndarray
             a numpy array (nIn + 1,1) containing the input of the layer
 
-        Change outp
+        Change output
         -------
-        outp: ndarray
+        output: ndarray
             a numpy array (nOut,1) containing the output of the layer
         """
+        # numpy indexing: array[vertical][horizontal]
+        #
+        # [ 00, 01, 02 ]  |
+        # [ 10, 11, 12 ] dim0
+        # [ 20, 21, 22 ]  v
+        #  --  dim1  -->
 
-        # Here you have to implement the forward pass
-        self.inp = inp
-        outp = self._fire(inp)
-        self.outp = outp
 
-        return outp
+        # Visualization of input, weight, and output:
+        # assume:
+        # - 3 features X = [x1, x2, x3]
+        # - 2 outputs  Y = [y1, y2]
+        # - no bias
+
+        # that means:
+        # [y1]   [ w11 w12 w13 ]   [x1]
+        # [  ] = [             ] * [x2]
+        # [y2]   [ w21 w22 w23 ]   [x3]
+        #
+        # wji = weight from input i to output/unit j
+
+        # therefore:
+        #  <--  nIn  -->
+        # [ w11 w12 w13 ] ^
+        # [             ] nOut
+        # [ w21 w22 w23 ] v
+        #
+        # np shape = (vertical, horizontal)
+        # => weights.shape = (nOut, nIn)
+        # => input.shape = (nIn, 1)
+        # => output.shape = (nOut, 1)
+
+
+        # Include bias => replace nIn with nIn+1
+        #
+        #                              [ 1]
+        # [y1] = [ w10 w11 w12 w13 ] * [x1]
+        # [y2]   [ w20 w21 w22 w23 ]   [x2]
+        #                              [x3]
+        # => weights.shape = (nOut, nIn + 1)
+        # => input.shape = (nIn+1, 1)
+
+
+        self.input = input
+        self.netOutputs = np.dot(self.weights, self.input)
+        self.output = self.activation(self.netOutputs)
+
+        return self.output
 
     def computeDerivative(self, next_derivatives, next_weights):
         """
@@ -124,17 +170,19 @@ class LogisticLayer():
 
         # Or even more general: doesn't care which activation function is used
         # dado: derivative of activation function w.r.t the output
-        dado = self.activationDerivative(self.outp)
-        self.deltas = (dado * np.dot(next_derivatives, next_weights))
+        # dado = self.activationDerivative(self.output)
+        # self.deltas = (dado * np.dot(next_derivatives, next_weights))
 
         # Or you can explicitly calculate the derivatives for two cases
         # Page 40 Back-propagation slides
-        # if self.isClassifierLayer:
-        #     self.deltas = (next_derivatives - self.outp) * self.outp * \
-        #                   (1 - self.outp)
-        # else:
-        #     self.deltas = self.outp * (1 - self.outp) * \
-        #                   np.dot(next_derivatives, next_weights)
+
+        if self.isClassifierLayer:
+            self.deltas = self.activationPrime(self.netOutputs) \
+                          * (next_derivatives - self.output)
+        else:
+            self.deltas = self.activationPrime(self.netOutputs) \
+                          * np.dot(next_derivatives, next_weights)
+
         # Or you can have two computeDerivative methods, feel free to call
         # the other is computeOutputLayerDerivative or such.
         return self.deltas
@@ -143,13 +191,8 @@ class LogisticLayer():
         """
         Update the weights of the layer
         """
-
         # weight updating as gradient descent principle
         for neuron in range(0, self.nOut):
             self.weights[:, neuron] -= (learningRate *
                                         self.deltas[neuron] *
-                                        self.inp)
-        
-
-    def _fire(self, inp):
-        return self.activation(np.dot(inp, self.weights))
+                                        self.input)

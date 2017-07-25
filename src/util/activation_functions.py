@@ -6,6 +6,7 @@ Activation functions which can be used within neurons.
 
 from numpy import exp
 from numpy import divide
+import numpy as np
 from numpy import ones
 from numpy import asarray
 
@@ -28,7 +29,7 @@ class Activation:
     def sigmoidPrime(netOutput):
         # Here you have to code the derivative of sigmoid function
         # netOutput.*(1-netOutput)
-        return netOutput * (1.0 - netOutput)
+        return Activation.sigmoid(netOutput) * (1 - Activation.sigmoid(netOutput))
 
     @staticmethod
     def tanh(netOutput):
@@ -40,7 +41,8 @@ class Activation:
     @staticmethod
     def tanhPrime(netOutput):
         # Here you have to code the derivative of tanh function
-        return (1-Activation.tanh(netOutput)**2)
+        # d/dx tanh(x) = 1 - tanh^2(x)
+        return 1 - Activation.tanh(netOutput) ** 2
 
     @staticmethod
     def rectified(netOutput):
@@ -48,9 +50,11 @@ class Activation:
 
     @staticmethod
     def rectifiedPrime(netOutput):
-        # reluPrime=1 if netOutput > 0 otherwise 0
-        #print(type(netOutput))
-        return netOutput>0
+        # Here you have to code the derivative of rectified linear function
+        if netOutput <= 0:
+            return 0.
+        else:
+            return 1.
 
     @staticmethod
     def identity(netOutput):
@@ -64,13 +68,21 @@ class Activation:
     @staticmethod
     def softmax(netOutput):
         # Here you have to code the softmax function
-        pass
-        
+
+        # netOutputs = { net_i }
+        # softmax: e^(net_j) / sum(k) of (e^net_k)
+        # sum => scalar, / => element-wise division of e^net_j by sum(e^net_k)
+        return np.exp(netOutput) / np.sum(np.exp(netOutput))
+
     @staticmethod
     def softmaxPrime(netOutput):
-        # Here you have to code the softmax function
-        pass
-        
+        # from 2016 slides (p. 20):
+        # d phi(a_j) / d a_j = phi(a_j) * (1 - phi(a_j))
+        # => compute softmax(x), elementwise application of formula
+        softmax = Activation.softmax(netOutput)
+        prime = softmax * (1 - softmax)
+        return prime
+
     @staticmethod
     def getActivation(str):
         """
